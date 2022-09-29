@@ -25,9 +25,71 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let params = {_csrf_token: csrfToken}
+
+
+const getPixelRatio = context => {
+  var backingStore =
+    context.backingStorePixelRatio ||
+    context.webkitBackingStorePixelRatio ||
+    context.mozBackingStorePixelRatio ||
+    context.msBackingStorePixelRatio ||
+    context.oBackingStorePixelRatio ||
+    context.backingStorePixelRatio ||
+    1;
+
+  return (window.devicePixelRatio || 1) / backingStore;
+};
+
+const resize = (canvas, ratio) => {
+  canvas.width = window.innerWidth * ratio;
+  canvas.height = window.innerHeight * ratio;
+  canvas.style.width = `${window.innerWidth}px`;
+  canvas.style.height = `${window.innerHeight}px`;
+};
+
+let hooks = {
+  canvas: {
+    mounted() {
+      let canvas = this.el;
+      let context = canvas.getContext("2d");
+      let ratio = getPixelRatio(context);
+
+      resize(canvas, ratio);
+
+      Object.assign(this, { canvas, context });
+    },
+    updated() {
+      let { canvas, context } = this;
+
+      let halfHeight = canvas.height / 2;
+      let halfWidth = canvas.width / 2;
+      let smallerHalf = Math.min(halfHeight, halfWidth);
+
+      let i = JSON.parse(canvas.dataset.i);
+
+      if (this.animationFrameRequest) {
+        cancelAnimationFrame(this.animationFrameRequest);
+      }
+
+      this.animationFrameRequest = requestAnimationFrame(() => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "rgba(128, 0, 255, 1)";
+        context.beginPath();
+        context.arc(
+          halfWidth + (Math.cos(i) * smallerHalf) / 2,
+          halfHeight + (Math.sin(i) * smallerHalf) / 2,
+          smallerHalf / 16,
+          0,
+          2 * Math.PI
+        );
+        context.fill();
+      })
+    }
+  }
+}
+let liveSocket = new LiveSocket("/live", Socket, {params, hooks})
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
