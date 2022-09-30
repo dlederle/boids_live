@@ -25,40 +25,19 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import sketch from "./sketch"
+
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let params = {_csrf_token: csrfToken}
-
-
-const getPixelRatio = context => {
-  var backingStore =
-    context.backingStorePixelRatio ||
-    context.webkitBackingStorePixelRatio ||
-    context.mozBackingStorePixelRatio ||
-    context.msBackingStorePixelRatio ||
-    context.oBackingStorePixelRatio ||
-    context.backingStorePixelRatio ||
-    1;
-
-  return (window.devicePixelRatio || 1) / backingStore;
-};
-
-const resize = (canvas, ratio) => {
-  canvas.width = window.innerWidth * ratio;
-  canvas.height = window.innerHeight * ratio;
-  canvas.style.width = `${window.innerWidth}px`;
-  canvas.style.height = `${window.innerHeight}px`;
-};
 
 let hooks = {
   canvas: {
     mounted() {
-      let canvas = this.el;
-      let context = canvas.getContext("2d");
-      let ratio = getPixelRatio(context);
+      let canvas  = this.el
+      let context = canvas.getContext("2d")
 
-      resize(canvas, ratio);
-
-      Object.assign(this, { canvas, context });
+      Object.assign(this, { canvas, context })
     },
     updated() {
       let { canvas, context } = this;

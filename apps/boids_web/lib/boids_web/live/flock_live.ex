@@ -6,7 +6,6 @@ defmodule BoidsWeb.FlockLive do
   def render(assigns) do
     ~H"""
     <canvas data-i={@i} phx-hook="canvas" id="flock" phx-update="ignore">
-      Canvas not supported!
     </canvas>
     """
   end
