@@ -25,7 +25,6 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import sketch from "./sketch"
 
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
@@ -46,7 +45,8 @@ let hooks = {
       let halfWidth = canvas.width / 2;
       let smallerHalf = Math.min(halfHeight, halfWidth);
 
-      let i = JSON.parse(canvas.dataset.i);
+      let x = JSON.parse(canvas.dataset.x);
+      let y = JSON.parse(canvas.dataset.y);
 
       if (this.animationFrameRequest) {
         cancelAnimationFrame(this.animationFrameRequest);
@@ -56,13 +56,15 @@ let hooks = {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = "rgba(128, 0, 255, 1)";
         context.beginPath();
-        context.arc(
-          halfWidth + (Math.cos(i) * smallerHalf) / 2,
-          halfHeight + (Math.sin(i) * smallerHalf) / 2,
-          smallerHalf / 16,
-          0,
-          2 * Math.PI
-        );
+        //context.arc(
+        //  halfWidth + (Math.cos(i) * smallerHalf) / 2,
+        //  halfHeight + (Math.sin(i) * smallerHalf) / 2,
+        //  smallerHalf / 16,
+        //  0,
+        //  2 * Math.PI
+        //);
+
+        context.arc(x, y, 5, 0, 2 * Math.PI)
         context.fill();
       })
     }
