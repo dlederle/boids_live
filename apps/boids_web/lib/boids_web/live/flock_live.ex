@@ -1,6 +1,8 @@
 defmodule BoidsWeb.FlockLive do
   use BoidsWeb, :live_view
 
+  alias Boids.Boid
+
   @tick_rate_ms 60
   @width 500
   @height 500
@@ -18,39 +20,37 @@ defmodule BoidsWeb.FlockLive do
 
     {:ok,
      socket
-     |> assign(:x, 0)
-     |> assign(:y, 0)}
+     |> assign(:boid, Boid.new(0, 0))}
   end
 
-  def handle_info(:tick, %{assigns: %{x: x, y: y}} = socket) do
+  def handle_info(:tick, %{assigns: %{boid: boid}} = socket) do
     tick()
-    {nx, ny} = generate_next_coord({x, y})
+    updated_boid = boid |> Boid.update() |> wrap()
 
-    updated_socket =
-      socket
-      |> assign(:x, nx)
-      |> assign(:y, ny)
+    updated_socket = assign(socket, :boid, updated_boid)
 
-    {:noreply, push_event(updated_socket, "render_boid", %{x: nx, y: ny})}
+    [x, y] = Boid.position(updated_boid)
+
+    {:noreply, push_event(updated_socket, "render_boid", %{x: x, y: y})}
   end
 
   defp tick(), do: Process.send_after(self(), :tick, @tick_rate_ms)
 
-  defp generate_next_coord({x, y}) do
-    nx =
-      cond do
-        x > @width -> 0
-        x < 0 -> @width
-        true -> x + 1
+  # Enforce canvas borders, wrap boid around to the other side
+  defp wrap(boid) do
+    # Goofy to convert it into a list then back to a tensor :(
+    new_pos =
+      boid
+      |> Boid.position()
+      |> case do
+        [x, y] when x < 0 -> [@width, y]
+        [x, y] when x > @width -> [0, y]
+        [x, y] when y < 0 -> [x, @width]
+        [x, y] when y > @height -> [x, 0]
+        inbounds -> inbounds
       end
+      |> Nx.tensor()
 
-    ny =
-      cond do
-        y > @height -> 0
-        y < 0 -> @height
-        true -> y + 1
-      end
-
-    {nx, ny}
+    %{boid | position: new_pos}
   end
 end
