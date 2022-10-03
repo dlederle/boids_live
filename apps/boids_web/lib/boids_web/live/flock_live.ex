@@ -7,7 +7,7 @@ defmodule BoidsWeb.FlockLive do
 
   def render(assigns) do
     ~H"""
-    <canvas width="500" height="500" data-x={@x} data-y={@y} phx-hook="canvas" id="flock" phx-update="ignore" style="border: 1px solid black;">
+    <canvas width="500" height="500" phx-hook="canvas" id="flock" phx-update="ignore" style="border: 1px solid black;">
       Canvas not supported!
     </canvas>
     """
@@ -26,10 +26,12 @@ defmodule BoidsWeb.FlockLive do
     tick()
     {nx, ny} = generate_next_coord({x, y})
 
-    {:noreply,
-     socket
-     |> assign(:x, nx)
-     |> assign(:y, ny)}
+    updated_socket =
+      socket
+      |> assign(:x, nx)
+      |> assign(:y, ny)
+
+    {:noreply, push_event(updated_socket, "render_boid", %{x: nx, y: ny})}
   end
 
   defp tick(), do: Process.send_after(self(), :tick, @tick_rate_ms)

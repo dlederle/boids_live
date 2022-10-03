@@ -36,38 +36,24 @@ let hooks = {
       let canvas  = this.el
       let context = canvas.getContext("2d")
 
-      Object.assign(this, { canvas, context })
-    },
-    updated() {
-      let { canvas, context } = this;
+      window.addEventListener('phx:render_boid', (e) => {
+        let x = e.detail.x
+        let y = e.detail.y
+        console.log(`Rendering at ${x} / ${y}`)
 
-      let halfHeight = canvas.height / 2;
-      let halfWidth = canvas.width / 2;
-      let smallerHalf = Math.min(halfHeight, halfWidth);
+        if (this.animationFrameRequest) {
+          cancelAnimationFrame(this.animationFrameRequest);
+        }
 
-      let x = JSON.parse(canvas.dataset.x);
-      let y = JSON.parse(canvas.dataset.y);
-
-      if (this.animationFrameRequest) {
-        cancelAnimationFrame(this.animationFrameRequest);
-      }
-
-      this.animationFrameRequest = requestAnimationFrame(() => {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = "rgba(128, 0, 255, 1)";
-        context.beginPath();
-        //context.arc(
-        //  halfWidth + (Math.cos(i) * smallerHalf) / 2,
-        //  halfHeight + (Math.sin(i) * smallerHalf) / 2,
-        //  smallerHalf / 16,
-        //  0,
-        //  2 * Math.PI
-        //);
-
-        context.arc(x, y, 5, 0, 2 * Math.PI)
-        context.fill();
+        this.animationFrameRequest = requestAnimationFrame(() => {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.fillStyle = "rgba(128, 0, 255, 1)";
+          context.beginPath();
+          context.arc(x, y, 5, 0, 2 * Math.PI)
+          context.fill();
+        })
       })
-    }
+    },
   }
 }
 let liveSocket = new LiveSocket("/live", Socket, {params, hooks})
