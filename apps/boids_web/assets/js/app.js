@@ -36,11 +36,7 @@ let hooks = {
       let canvas  = this.el
       let context = canvas.getContext("2d")
 
-      window.addEventListener('phx:render_boid', (e) => {
-        let x = e.detail.x
-        let y = e.detail.y
-        console.log(`Rendering at ${x} / ${y}`)
-
+      window.addEventListener('phx:render_boids', (e) => {
         if (this.animationFrameRequest) {
           cancelAnimationFrame(this.animationFrameRequest);
         }
@@ -49,8 +45,13 @@ let hooks = {
           context.clearRect(0, 0, canvas.width, canvas.height);
           context.fillStyle = "rgba(128, 0, 255, 1)";
           context.beginPath();
-          context.arc(x, y, 5, 0, 2 * Math.PI)
-          context.fill();
+
+          e.detail.boids.forEach(boid => {
+            let [x, y] = boid
+            context.moveTo(x, y);
+            context.arc(x, y, 5, 0, 2 * Math.PI)
+          })
+          context.stroke();
         })
       })
     },

@@ -18,20 +18,34 @@ defmodule BoidsWeb.FlockLive do
   def mount(_params, _session, socket) do
     tick()
 
+    flock = [
+      Boid.new(0, 0),
+      Boid.new(10, 0),
+      Boid.new(10, 10),
+      Boid.new(20, 10),
+      Boid.new(20, 20)
+    ]
+
     {:ok,
      socket
-     |> assign(:boid, Boid.new(0, 0))}
+     |> assign(:flock, flock)}
   end
 
-  def handle_info(:tick, %{assigns: %{boid: boid}} = socket) do
+  def handle_info(:tick, %{assigns: %{flock: flock}} = socket) do
     tick()
-    updated_boid = boid |> Boid.update() |> wrap()
 
-    updated_socket = assign(socket, :boid, updated_boid)
+    flock =
+      flock
+      |> Enum.map(fn boid ->
+        boid
+        |> Boid.update()
+        |> wrap()
+      end)
 
-    [x, y] = Boid.position(updated_boid)
+    updated_socket = assign(socket, :flock, flock)
+    boids = Enum.map(flock, &Boid.position/1)
 
-    {:noreply, push_event(updated_socket, "render_boid", %{x: x, y: y})}
+    {:noreply, push_event(updated_socket, "render_boids", %{boids: boids})}
   end
 
   defp tick(), do: Process.send_after(self(), :tick, @tick_rate_ms)
