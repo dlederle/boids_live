@@ -1,7 +1,9 @@
 defmodule BoidsWeb.FlockLive do
   use BoidsWeb, :live_view
 
+  alias Boids
   alias Boids.Boid
+  alias Boids.Flock
 
   @tick_rate_ms 60
   @width 500
@@ -18,13 +20,18 @@ defmodule BoidsWeb.FlockLive do
   def mount(_params, _session, socket) do
     tick()
 
-    flock = [
-      Boid.new(0, 0),
-      Boid.new(10, 0),
-      Boid.new(10, 10),
-      Boid.new(20, 10),
-      Boid.new(20, 20)
-    ]
+    flock =
+      [
+        Boid.new(0, 0),
+        Boid.new(10, 0),
+        Boid.new(10, 10),
+        Boid.new(20, 10),
+        Boid.new(20, 20),
+        Boid.new(20, 20),
+        Boid.new(20, 20),
+        Boid.new(30, 20)
+      ]
+      |> Flock.new()
 
     {:ok,
      socket
@@ -34,16 +41,13 @@ defmodule BoidsWeb.FlockLive do
   def handle_info(:tick, %{assigns: %{flock: flock}} = socket) do
     tick()
 
-    flock =
+    moved_flock =
       flock
-      |> Enum.map(fn boid ->
-        boid
-        |> Boid.update()
-        |> wrap()
-      end)
+      |> Boids.calculate_flock()
+      |> Boids.move_flock(&wrap/1)
 
-    updated_socket = assign(socket, :flock, flock)
-    boids = Enum.map(flock, &Boid.position/1)
+    updated_socket = assign(socket, :flock, moved_flock)
+    boids = Enum.map(flock.members, &Boid.position/1)
 
     {:noreply, push_event(updated_socket, "render_boids", %{boids: boids})}
   end

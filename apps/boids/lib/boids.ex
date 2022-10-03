@@ -9,14 +9,21 @@ defmodule Boids do
   alias Boids.{Boid, Flock}
 
   # run one frame of the flocking algorithm
-  def calculate_flock(%Flock{members: members}) do
+  def calculate_flock(%Flock{members: members} = flock) do
     %Flock{
       members:
         Enum.map(members, fn b ->
-          separation = separate(b, members)
-          IO.inspect(separation)
+          separation = separate(b, flock)
+          %{b | acceleration: Nx.add(b.acceleration, separation)}
+        end)
+    }
+  end
 
-          members
+  def move_flock(%Flock{members: members}, wrap_fn \\ &Function.identity/1) do
+    %Flock{
+      members:
+        Enum.map(members, fn b ->
+          b |> Boid.update() |> wrap_fn.()
         end)
     }
   end
@@ -35,28 +42,32 @@ defmodule Boids do
   def separate(%Boid{} = boid, %Flock{members: members}) do
     desired_separation = 100
 
-    {steer, count} =
-      Enum.reduce(members, {Nx.tensor(0, 0), 0}, fn b, {v, count} ->
-        distance = distance(boid.position, b.position)
-        return = {v, count}
+    initial_vector = Nx.tensor([0, 0])
 
-        if(distance > 0 and distance < desired_separation) do
-          return = {
+    {steer, count} =
+      Enum.reduce(members, {initial_vector, 0}, fn b, {v, count} ->
+        d = distance(boid.position, b.position)
+
+        if d > 0 and d < desired_separation do
+          {
             boid.position
             # vector pointing away from neighbor
             |> Nx.subtract(b.position)
             # weight by distance
-            |> Nx.divide(distance)
+            |> Nx.divide(d)
             |> Nx.add(v),
             count + 1
           }
+        else
+          {v, count}
         end
-
-        return
       end)
 
-    # TODO: velocity stuff
-    Nx.divide(steer, count)
+    if count > 0 do
+      Nx.divide(steer, count)
+    else
+      steer
+    end
   end
 
   # PSEUDOCODE:
