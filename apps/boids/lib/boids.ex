@@ -8,13 +8,26 @@ defmodule Boids do
 
   alias Boids.{Boid, Flock}
 
+  @max_speed 3
+  @max_force 0.5
+
   # run one frame of the flocking algorithm
   def calculate_flock(%Flock{members: members} = flock) do
     %Flock{
       members:
         Enum.map(members, fn b ->
           separation = separate(b, flock)
-          %{b | acceleration: Nx.add(b.acceleration, separation)}
+          alignment = align(b, flock)
+          coherence = cohere(b, flock)
+
+          acceleration =
+            b.acceleration
+            |> Nx.add(separation)
+
+          # |> Nx.add(alignment)
+          # |> Nx.add(coherence)
+
+          %{b | acceleration: acceleration}
         end)
     }
   end
@@ -55,7 +68,8 @@ defmodule Boids do
             |> Nx.subtract(b.position)
             # weight by distance
             |> Nx.divide(d)
-            |> Nx.add(v),
+            |> Nx.add(v)
+            |> to_unit_vector(),
             count + 1
           }
         else
@@ -63,8 +77,25 @@ defmodule Boids do
         end
       end)
 
+    # if (steer.mag() > 0) {
+    #   steer.normalize();
+    #   steer.mult(this.maxspeed);
+    #   steer.sub(this.velocity);
+    #   steer.limit(this.maxforce);
+    # }
+    # return steer;
     if count > 0 do
-      Nx.divide(steer, count)
+      normalized_steer = Nx.divide(steer, count)
+
+      if magnitude(normalized_steer) > 0 do
+        # Implement Reynolds: Steering = Desired - Velocity
+        steer
+        |> to_unit_vector()
+        |> Nx.multiply(@max_speed)
+        |> Nx.clip(0, @max_force)
+      else
+        normalized_steer
+      end
     else
       steer
     end
@@ -81,7 +112,38 @@ defmodule Boids do
   # 		pcJ = pcJ / N-1
   #
   # 		RETURN (pcJ - bJ.position) / 100
-  def align(boids) when is_list(boids) do
+  def align(%Boid{} = boid, %Flock{members: members}) do
+    neighbor_distance = 50
+
+    initial_vector = Nx.tensor([0, 0])
+
+    {steer, count} =
+      Enum.reduce(members, {initial_vector, 0}, fn b, {v, count} ->
+        d = distance(boid.position, b.position)
+
+        if d > 0 and d < neighbor_distance do
+          {
+            Nx.add(b.velocity, v),
+            count + 1
+          }
+        else
+          {v, count}
+        end
+      end)
+
+    if count > 0 do
+      #   sum.div(count);
+      #   sum.normalize();
+      #   sum.mult(this.maxspeed);
+      #   let steer = p5.Vector.sub(sum, this.velocity);
+      #   steer.limit(this.maxforce);
+      #   return steer;
+      steer
+      |> Nx.divide(count)
+      |> to_unit_vector()
+    else
+      steer
+    end
   end
 
   # PSEUDOCODE:
@@ -95,10 +157,52 @@ defmodule Boids do
   # 		pvJ = pvJ / N-1
   #
   # 		RETURN (pvJ - bJ.velocity) / 8
-  def cohesion(boids) when is_list(boids) do
+  def cohere(%Boid{} = boid, %Flock{members: members}) do
+    neighbor_distance = 50
+
+    initial_vector = Nx.tensor([0, 0])
+
+    {steer, count} =
+      Enum.reduce(members, {initial_vector, 0}, fn b, {v, count} ->
+        d = distance(boid.position, b.position)
+
+        if d > 0 and d < neighbor_distance do
+          {
+            Nx.add(b.position, v),
+            count + 1
+          }
+        else
+          {v, count}
+        end
+      end)
+
+    if count > 0 do
+      #   sum.div(count);
+      #   sum.normalize();
+      #   sum.mult(this.maxspeed);
+      #   let steer = p5.Vector.sub(sum, this.velocity);
+      #   steer.limit(this.maxforce);
+      #   return steer;
+      steer
+      |> Nx.divide(count)
+      # |> Nx.multiply(@max_speed)
+      |> Nx.subtract(boid.velocity)
+      |> to_unit_vector()
+    else
+      steer
+    end
+
+    # if (count > 0) {
+    #   sum.div(count);
+    #   return this.seek(sum);  // Steer towards the location
+    # } else {
+    #   return createVector(0, 0);
+    # }
   end
 
   # God ol' Pythagoras
+  def distance(a, a), do: 0
+
   def distance(a, b) when is_tensor(a) and is_tensor(b) do
     [ax, ay] = Nx.to_flat_list(a)
     [bx, by] = Nx.to_flat_list(b)
@@ -107,5 +211,15 @@ defmodule Boids do
       :math.pow(bx - ax, 2) +
         :math.pow(by - ay, 2)
     )
+  end
+
+  def magnitude(vector) when is_tensor(vector) do
+    vector
+    |> distance(Nx.tensor([0, 0]))
+  end
+
+  def to_unit_vector(vector) when is_tensor(vector) do
+    vector
+    |> Nx.divide(magnitude(vector))
   end
 end

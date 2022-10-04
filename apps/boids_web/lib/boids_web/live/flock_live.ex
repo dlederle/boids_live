@@ -5,7 +5,7 @@ defmodule BoidsWeb.FlockLive do
   alias Boids.Boid
   alias Boids.Flock
 
-  @tick_rate_ms 60
+  @tick_rate_ms 12
   @width 500
   @height 500
 
