@@ -8,24 +8,25 @@ defmodule Boids do
 
   alias Boids.{Boid, Flock}
 
-  @max_speed 3
-  @max_force 0.5
-
   # run one frame of the flocking algorithm
   def calculate_flock(%Flock{members: members} = flock) do
     %Flock{
       members:
         Enum.map(members, fn b ->
-          separation = separate(b, flock)
-          alignment = align(b, flock)
-          coherence = cohere(b, flock)
+          separation = separate(b, flock) |> Nx.multiply(1.5)
+          alignment = align(b, flock) |> Nx.multiply(1.0)
+          coherence = cohere(b, flock) |> Nx.multiply(1.0)
+
+          # IO.inspect("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+          #  IO.inspect(alignment, label: "alignment")
+          #    IO.inspect(coherence, label: "coherence")
+          #    IO.inspect(separation, label: "separation")
 
           acceleration =
             b.acceleration
             |> Nx.add(separation)
-
-          # |> Nx.add(alignment)
-          # |> Nx.add(coherence)
+            |> Nx.add(coherence)
+            |> Nx.add(alignment)
 
           %{b | acceleration: acceleration}
         end)
@@ -53,7 +54,7 @@ defmodule Boids do
   #
   # 		RETURN c
   def separate(%Boid{} = boid, %Flock{members: members}) do
-    desired_separation = 100
+    desired_separation = 25
 
     initial_vector = Nx.tensor([0, 0])
 
@@ -77,13 +78,6 @@ defmodule Boids do
         end
       end)
 
-    # if (steer.mag() > 0) {
-    #   steer.normalize();
-    #   steer.mult(this.maxspeed);
-    #   steer.sub(this.velocity);
-    #   steer.limit(this.maxforce);
-    # }
-    # return steer;
     if count > 0 do
       normalized_steer = Nx.divide(steer, count)
 
@@ -91,8 +85,6 @@ defmodule Boids do
         # Implement Reynolds: Steering = Desired - Velocity
         steer
         |> to_unit_vector()
-        |> Nx.multiply(@max_speed)
-        |> Nx.clip(0, @max_force)
       else
         normalized_steer
       end
@@ -185,9 +177,8 @@ defmodule Boids do
       #   return steer;
       steer
       |> Nx.divide(count)
-      # |> Nx.multiply(@max_speed)
-      |> Nx.subtract(boid.velocity)
       |> to_unit_vector()
+      |> Nx.subtract(boid.velocity)
     else
       steer
     end

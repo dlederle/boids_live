@@ -5,13 +5,16 @@ defmodule BoidsWeb.FlockLive do
   alias Boids.Boid
   alias Boids.Flock
 
-  @tick_rate_ms 12
-  @width 500
-  @height 500
+  @tick_rate_ms 16
+  @width 640
+  @height 360
 
   def render(assigns) do
+    width = @width
+    height = @height
+
     ~H"""
-    <canvas width="500" height="500" phx-hook="canvas" id="flock" phx-update="ignore" style="border: 1px solid black;">
+    <canvas width={width} height={height} phx-hook="canvas" id="flock" phx-update="ignore" style="border: 1px solid black;">
       Canvas not supported!
     </canvas>
     """
@@ -24,12 +27,25 @@ defmodule BoidsWeb.FlockLive do
       [
         Boid.new(0, 0),
         Boid.new(10, 0),
-        Boid.new(10, 10),
         Boid.new(20, 10),
-        Boid.new(20, 20),
-        Boid.new(20, 20),
-        Boid.new(20, 20),
-        Boid.new(30, 20)
+        Boid.new(10, 10),
+        Boid.new(250, 250)
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250),
+        # Boid.new(250, 250)
       ]
       |> Flock.new()
 

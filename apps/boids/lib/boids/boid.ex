@@ -14,6 +14,7 @@ defmodule Boids.Boid do
   def position(%__MODULE__{position: position}), do: Nx.to_flat_list(position)
 
   def update(%__MODULE__{} = boid) do
+    # TODO: limit to max_speed
     v = Nx.add(boid.velocity, boid.acceleration)
     p = Nx.add(boid.position, v)
     a = Nx.multiply(boid.acceleration, 0)
