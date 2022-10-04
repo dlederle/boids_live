@@ -10,4 +10,6 @@ defmodule Boids.Flock do
       members: [boid | members]
     }
   end
+
+  def size(%__MODULE__{members: members}), do: Enum.count(members)
 end

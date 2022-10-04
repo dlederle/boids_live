@@ -14,6 +14,7 @@ defmodule BoidsWeb.FlockLive do
     height = @height
 
     ~H"""
+    <h1>Boid count: <%= Flock.size(@flock) %></h1>
     <canvas width={width} height={height} phx-hook="canvas" id="flock" phx-update="ignore" style="border: 1px solid black;">
       Canvas not supported!
     </canvas>
@@ -41,6 +42,15 @@ defmodule BoidsWeb.FlockLive do
      socket
      |> assign(:tick_rate, @tick_rate_ms)
      |> assign(:flock, flock)}
+  end
+
+  def handle_event("add_boid", %{"x" => x, "y" => y}, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       :flock,
+       Flock.add(socket.assigns.flock, Boid.new(x, y))
+     )}
   end
 
   def handle_event("set_tick_rate", %{"_target" => ["tick_rate"], "tick_rate" => rate}, socket) do

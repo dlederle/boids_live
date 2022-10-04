@@ -27,6 +27,15 @@ import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
 
+// https://stackoverflow.com/a/18053642
+function getCursorPosition(canvas, event) {
+  const rect = canvas.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
+  console.log("x: " + x + " y: " + y)
+  return [x, y]
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let params = {_csrf_token: csrfToken}
 
@@ -35,6 +44,13 @@ let hooks = {
     mounted() {
       let canvas  = this.el
       let context = canvas.getContext("2d")
+
+      let hook = this
+
+      canvas.addEventListener('mousedown', function(e) {
+        let [x, y] = getCursorPosition(canvas, event)
+        hook.pushEvent("add_boid", {x, y})
+      })
 
       window.addEventListener('phx:render_boids', (e) => {
         if (this.animationFrameRequest) {

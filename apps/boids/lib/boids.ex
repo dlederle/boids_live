@@ -67,10 +67,10 @@ defmodule Boids do
             boid.position
             # vector pointing away from neighbor
             |> Nx.subtract(b.position)
+            |> to_unit_vector()
             # weight by distance
             |> Nx.divide(d)
-            |> Nx.add(v)
-            |> to_unit_vector(),
+            |> Nx.add(v),
             count + 1
           }
         else
@@ -85,6 +85,7 @@ defmodule Boids do
         # Implement Reynolds: Steering = Desired - Velocity
         steer
         |> to_unit_vector()
+        |> Nx.subtract(boid.velocity)
       else
         normalized_steer
       end
