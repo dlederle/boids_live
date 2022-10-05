@@ -31,11 +31,8 @@ defmodule BoidsWeb.FlockLive do
 
     flock =
       [
-        Boid.new(0, 0),
-        Boid.new(10, 0),
-        Boid.new(20, 10),
-        Boid.new(10, 10),
-        Boid.new(250, 250)
+        Boid.new(@width / 2, @height / 2),
+        Boid.new(@width / 2, @height / 2)
       ]
       |> Flock.new()
 
