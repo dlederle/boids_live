@@ -4,6 +4,7 @@ defmodule BoidsWeb.FlockLive do
   alias Boids
   alias Boids.Boid
   alias Boids.Flock
+  alias Boids.Vector
 
   @tick_rate_ms 16
   @width 640
@@ -86,7 +87,7 @@ defmodule BoidsWeb.FlockLive do
         [x, y] when y > @height -> [x, 0]
         inbounds -> inbounds
       end
-      |> Nx.tensor()
+      |> Vector.new()
 
     %{boid | position: new_pos}
   end

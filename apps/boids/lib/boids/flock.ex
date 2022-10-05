@@ -1,7 +1,6 @@
 defmodule Boids.Flock do
-  import Boids.Vector
-
   alias Boids.Boid
+  alias Boids.Vector
 
   defstruct members: []
 
@@ -22,9 +21,9 @@ defmodule Boids.Flock do
     %__MODULE__{
       members:
         Enum.map(members, fn b ->
-          separation = separate(b, flock) |> Nx.multiply(1.5)
-          alignment = align(b, flock) |> Nx.multiply(1.0)
-          coherence = cohere(b, flock) |> Nx.multiply(1.0)
+          separation = separate(b, flock) |> Vector.multiply(1.5)
+          alignment = align(b, flock) |> Vector.multiply(1.0)
+          coherence = cohere(b, flock) |> Vector.multiply(1.0)
 
           # IO.inspect("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
           #  IO.inspect(alignment, label: "alignment")
@@ -33,9 +32,9 @@ defmodule Boids.Flock do
 
           acceleration =
             b.acceleration
-            |> Nx.add(separation)
-            |> Nx.add(coherence)
-            |> Nx.add(alignment)
+            |> Vector.add(separation)
+            |> Vector.add(coherence)
+            |> Vector.add(alignment)
 
           %{b | acceleration: acceleration}
         end)
@@ -68,21 +67,21 @@ defmodule Boids.Flock do
   defp separate(%Boid{} = boid, %__MODULE__{members: members}) do
     desired_separation = 25
 
-    initial_vector = Nx.tensor([0, 0])
+    initial_vector = Vector.new([0, 0])
 
     {steer, count} =
       Enum.reduce(members, {initial_vector, 0}, fn b, {v, count} ->
-        d = distance(boid.position, b.position)
+        d = Vector.distance(boid.position, b.position)
 
         if d > 0 and d < desired_separation do
           {
             boid.position
             # vector pointing away from neighbor
-            |> Nx.subtract(b.position)
-            |> to_unit_vector()
+            |> Vector.subtract(b.position)
+            |> Vector.to_unit_vector()
             # weight by distance
-            |> Nx.divide(d)
-            |> Nx.add(v),
+            |> Vector.divide(d)
+            |> Vector.add(v),
             count + 1
           }
         else
@@ -91,13 +90,13 @@ defmodule Boids.Flock do
       end)
 
     if count > 0 do
-      normalized_steer = Nx.divide(steer, count)
+      normalized_steer = Vector.divide(steer, count)
 
-      if magnitude(normalized_steer) > 0 do
+      if Vector.magnitude(normalized_steer) > 0 do
         # Implement Reynolds: Steering = Desired - Velocity
         steer
-        |> to_unit_vector()
-        |> Nx.subtract(boid.velocity)
+        |> Vector.to_unit_vector()
+        |> Vector.subtract(boid.velocity)
       else
         normalized_steer
       end
@@ -120,15 +119,15 @@ defmodule Boids.Flock do
   defp align(%Boid{} = boid, %__MODULE__{members: members}) do
     neighbor_distance = 50
 
-    initial_vector = Nx.tensor([0, 0])
+    initial_vector = Vector.new([0, 0])
 
     {steer, count} =
       Enum.reduce(members, {initial_vector, 0}, fn b, {v, count} ->
-        d = distance(boid.position, b.position)
+        d = Vector.distance(boid.position, b.position)
 
         if d > 0 and d < neighbor_distance do
           {
-            Nx.add(b.velocity, v),
+            Vector.add(b.velocity, v),
             count + 1
           }
         else
@@ -144,8 +143,8 @@ defmodule Boids.Flock do
       #   steer.limit(this.maxforce);
       #   return steer;
       steer
-      |> Nx.divide(count)
-      |> to_unit_vector()
+      |> Vector.divide(count)
+      |> Vector.to_unit_vector()
     else
       steer
     end
@@ -165,15 +164,15 @@ defmodule Boids.Flock do
   defp cohere(%Boid{} = boid, %__MODULE__{members: members}) do
     neighbor_distance = 50
 
-    initial_vector = Nx.tensor([0, 0])
+    initial_vector = Vector.new([0, 0])
 
     {steer, count} =
       Enum.reduce(members, {initial_vector, 0}, fn b, {v, count} ->
-        d = distance(boid.position, b.position)
+        d = Vector.distance(boid.position, b.position)
 
         if d > 0 and d < neighbor_distance do
           {
-            Nx.add(b.position, v),
+            Vector.add(b.position, v),
             count + 1
           }
         else
@@ -183,9 +182,9 @@ defmodule Boids.Flock do
 
     if count > 0 do
       steer
-      |> Nx.divide(count)
-      |> to_unit_vector()
-      |> Nx.subtract(boid.velocity)
+      |> Vector.divide(count)
+      |> Vector.to_unit_vector()
+      |> Vector.subtract(boid.velocity)
     else
       steer
     end

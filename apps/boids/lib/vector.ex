@@ -4,6 +4,13 @@ defmodule Boids.Vector do
   """
   import Nx, only: [is_tensor: 1]
 
+  defdelegate multiply(a, b), to: Nx
+  defdelegate divide(a, b), to: Nx
+  defdelegate add(a, b), to: Nx
+  defdelegate subtract(a, b), to: Nx
+  defdelegate new(list), to: Nx, as: :tensor
+  defdelegate to_flat_list(vec), to: Nx
+
   # God ol' Pythagoras
   def distance(a, a), do: 0
 

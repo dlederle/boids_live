@@ -1,22 +1,24 @@
 defmodule Boids.Boid do
-  defstruct acceleration: Nx.tensor([0, 0]),
-            velocity: Nx.tensor([0, 0]),
-            position: Nx.tensor([0, 0])
+  alias Boids.Vector
+
+  defstruct acceleration: Vector.new([0, 0]),
+            velocity: Vector.new([0, 0]),
+            position: Vector.new([0, 0])
 
   def new(x, y) do
     %__MODULE__{
-      acceleration: Nx.tensor([:rand.uniform(), :rand.uniform()]),
-      velocity: Nx.tensor([:rand.uniform(), :rand.uniform()]),
-      position: Nx.tensor([x, y])
+      acceleration: Vector.new([:rand.uniform(), :rand.uniform()]),
+      velocity: Vector.new([:rand.uniform(), :rand.uniform()]),
+      position: Vector.new([x, y])
     }
   end
 
-  def position(%__MODULE__{position: position}), do: Nx.to_flat_list(position)
+  def position(%__MODULE__{position: position}), do: Vector.to_flat_list(position)
 
   def update(%__MODULE__{} = boid) do
-    v = Nx.add(boid.velocity, boid.acceleration)
-    p = Nx.add(boid.position, v)
-    a = Nx.multiply(boid.acceleration, 0)
+    v = Vector.add(boid.velocity, boid.acceleration)
+    p = Vector.add(boid.position, v)
+    a = Vector.multiply(boid.acceleration, 0)
 
     %__MODULE__{
       velocity: v,
