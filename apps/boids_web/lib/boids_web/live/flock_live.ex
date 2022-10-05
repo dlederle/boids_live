@@ -62,7 +62,7 @@ defmodule BoidsWeb.FlockLive do
 
     moved_flock =
       flock
-      |> Boids.calculate_flock()
+      |> Boids.calculate_next_acceleration()
       |> Boids.move_flock(&wrap/1)
 
     updated_socket = assign(socket, :flock, moved_flock)

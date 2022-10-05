@@ -63,9 +63,11 @@ let hooks = {
           context.beginPath();
 
           e.detail.boids.forEach(boid => {
+            let radius = 5
+            let angle = 15
             let [x, y] = boid
             context.moveTo(x, y);
-            context.arc(x, y, 5, 0, 2 * Math.PI)
+            context.arc(x, y, radius, 0, 8 * Math.PI)
           })
           context.stroke();
         })
